@@ -1,0 +1,15 @@
+.git
+.reference
+node_modules
+app/web/node_modules
+app/web/dist
+app/api/public
+app/api/bin
+coverage
+tmp
+temp
+.cache
+*.log
+.env
+.env.*
+whooing-codex-api

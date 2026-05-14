@@ -3,9 +3,7 @@ package reports
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -27,17 +25,17 @@ type MonthlyResponse struct {
 	IncomeDelta         float64              `json:"incomeDelta"`
 	ExpenseDelta        float64              `json:"expenseDelta"`
 	NetCashflowDelta    float64              `json:"netCashflowDelta"`
-	DailyExpenseTrend   []DailyTrendPoint    `json:"dailyExpenseTrend"`
+	DailyCashflowTrend  []DailyCashflowPoint `json:"dailyCashflowTrend"`
 	MonthlyExpenseTrend []MonthlyTrendPoint  `json:"monthlyExpenseTrend"`
 	MonthlyIncomeTrend  []MonthlyIncomePoint `json:"monthlyIncomeTrend"`
 	ExpenseCategories   []ExpenseCategoryRow `json:"expenseCategories"`
-	TopExpenseItems     []ExpenseItem        `json:"topExpenseItems"`
-	BigTransactions     []ExpenseEntry       `json:"bigTransactions"`
+	IncomeCategories    []ExpenseCategoryRow `json:"incomeCategories"`
 }
 
-type DailyTrendPoint struct {
-	Label             string  `json:"label"`
-	CumulativeExpense float64 `json:"cumulativeExpense"`
+type DailyCashflowPoint struct {
+	Label   string  `json:"label"`
+	Expense float64 `json:"expense"`
+	Income  float64 `json:"income"`
 }
 
 type MonthlyTrendPoint struct {
@@ -51,27 +49,15 @@ type MonthlyIncomePoint struct {
 }
 
 type ExpenseCategoryRow struct {
-	Category string  `json:"category"`
-	Amount   float64 `json:"amount"`
-	Share    float64 `json:"share"`
-	Count    int     `json:"count"`
+	Category string        `json:"category"`
+	Amount   float64       `json:"amount"`
+	Share    float64       `json:"share"`
+	Items    []ExpenseItem `json:"items"`
 }
 
 type ExpenseItem struct {
 	Item   string  `json:"item"`
 	Amount float64 `json:"amount"`
-	Count  int     `json:"count"`
-}
-
-type ExpenseEntry struct {
-	EntryID      int64   `json:"entryId"`
-	EntryDate    string  `json:"entryDate"`
-	Item         string  `json:"item"`
-	Amount       float64 `json:"amount"`
-	Account      string  `json:"account"`
-	AccountID    string  `json:"accountId"`
-	AccountTitle string  `json:"accountTitle"`
-	Memo         string  `json:"memo"`
 }
 
 type Service struct {
@@ -130,16 +116,6 @@ func (s Service) Monthly(ctx context.Context, now time.Time, requestedMonth stri
 		return MonthlyResponse{}, err
 	}
 
-	expenseEntries, err := s.listExpenseEntries(
-		ctx,
-		section.SectionID,
-		currentStart.Format("20060102"),
-		currentEnd.Format("20060102"),
-	)
-	if err != nil {
-		return MonthlyResponse{}, err
-	}
-
 	accountMeta, err := s.accountMetaByID(ctx, section.SectionID)
 	if err != nil {
 		return MonthlyResponse{}, err
@@ -150,12 +126,36 @@ func (s Service) Monthly(ctx context.Context, now time.Time, requestedMonth stri
 		return MonthlyResponse{}, err
 	}
 
-	dailyExpenseTrend, err := buildDailyExpenseTrend(expenseEntries, currentStart, currentEnd)
+	dailyCashflowTrend, err := s.dailyCashflowTrend(ctx, section.SectionID, currentStart, currentEnd, accountMeta)
 	if err != nil {
 		return MonthlyResponse{}, err
 	}
 
-	expenseCategories := aggregateExpenseCategories(expenseEntries, accountMeta, currentSummary.Expenses)
+	expenseCategories, err := s.categoryBreakdownByWhooing(
+		ctx,
+		section.SectionID,
+		"expenses",
+		currentStart.Format("20060102"),
+		currentEnd.Format("20060102"),
+		currentSummary.Expenses,
+		accountMeta,
+	)
+	if err != nil {
+		return MonthlyResponse{}, err
+	}
+
+	incomeCategories, err := s.categoryBreakdownByWhooing(
+		ctx,
+		section.SectionID,
+		"income",
+		currentStart.Format("20060102"),
+		currentEnd.Format("20060102"),
+		currentSummary.Income,
+		accountMeta,
+	)
+	if err != nil {
+		return MonthlyResponse{}, err
+	}
 
 	response := MonthlyResponse{
 		SectionID:           section.SectionID,
@@ -171,65 +171,21 @@ func (s Service) Monthly(ctx context.Context, now time.Time, requestedMonth stri
 		IncomeDelta:         currentSummary.Income - prevSummary.Income,
 		ExpenseDelta:        currentSummary.Expenses - prevSummary.Expenses,
 		NetCashflowDelta:    currentSummary.NetIncome - prevSummary.NetIncome,
-		DailyExpenseTrend:   dailyExpenseTrend,
+		DailyCashflowTrend:  dailyCashflowTrend,
 		MonthlyExpenseTrend: monthlyExpenseTrend,
 		MonthlyIncomeTrend:  monthlyIncomeTrend,
 		ExpenseCategories:   expenseCategories,
-		TopExpenseItems:     aggregateExpenseItems(expenseEntries),
-		BigTransactions:     topExpenseTransactions(expenseEntries, accountMeta),
+		IncomeCategories:    incomeCategories,
 	}
 	s.cache.Set(cacheKey, response)
 
 	return response, nil
 }
 
-func (s Service) listExpenseEntries(ctx context.Context, sectionID string, startDate string, endDate string) ([]whooing.Entry, error) {
-	const limit = 200
-	rows := make([]whooing.Entry, 0, limit)
-	seen := map[int64]bool{}
-	maxValue := ""
-
-	for page := 0; page < 4; page++ {
-		params := url.Values{}
-		params.Set("section_id", sectionID)
-		params.Set("account", "expenses")
-		params.Set("start_date", startDate)
-		params.Set("end_date", endDate)
-		params.Set("limit", strconv.Itoa(limit))
-		if maxValue != "" {
-			params.Set("max", maxValue)
-		}
-
-		response, err := s.whooingClient.GetEntries(ctx, params)
-		if err != nil {
-			return nil, err
-		}
-		if len(response.Rows) == 0 {
-			break
-		}
-
-		for _, row := range response.Rows {
-			if seen[row.EntryID] {
-				continue
-			}
-			seen[row.EntryID] = true
-			rows = append(rows, row)
-		}
-
-		last := response.Rows[len(response.Rows)-1]
-		if len(response.Rows) < limit || last.EntryID <= 1 {
-			break
-		}
-		maxValue = strconv.FormatInt(last.EntryID-1, 10)
-	}
-
-	return rows, nil
-}
-
 func (s Service) monthlyTrends(ctx context.Context, sectionID string, targetMonth time.Time) ([]MonthlyTrendPoint, []MonthlyIncomePoint, error) {
-	expensePoints := make([]MonthlyTrendPoint, 0, 6)
-	incomePoints := make([]MonthlyIncomePoint, 0, 6)
-	for offset := 5; offset >= 0; offset-- {
+	expensePoints := make([]MonthlyTrendPoint, 0, 24)
+	incomePoints := make([]MonthlyIncomePoint, 0, 24)
+	for offset := 23; offset >= 0; offset-- {
 		month := targetMonth.AddDate(0, -offset, 0)
 		startDate := firstDayOfMonth(month)
 		endDate := lastDayOfMonth(month)
@@ -257,24 +213,91 @@ func (s Service) monthlyTrends(ctx context.Context, sectionID string, targetMont
 	return expensePoints, incomePoints, nil
 }
 
-func aggregateExpenseCategories(entries []whooing.Entry, accountMeta map[string]accountMeta, totalExpense float64) []ExpenseCategoryRow {
-	aggregated := map[string]*ExpenseCategoryRow{}
-	for _, entry := range entries {
-		category := expenseCategoryTitle(entry, accountMeta)
-		if _, ok := aggregated[category]; !ok {
-			aggregated[category] = &ExpenseCategoryRow{Category: category}
-		}
-
-		aggregated[category].Amount += float64(entry.Money)
-		aggregated[category].Count++
+func (s Service) categoryBreakdownByWhooing(
+	ctx context.Context,
+	sectionID string,
+	group string,
+	startDate string,
+	endDate string,
+	totalAmount float64,
+	accountMeta map[string]accountMeta,
+) ([]ExpenseCategoryRow, error) {
+	categoryTotals, err := s.whooingClient.GetAccountIDsOfAccount(ctx, sectionID, group, startDate, endDate)
+	if err != nil {
+		return nil, err
 	}
 
-	rows := make([]ExpenseCategoryRow, 0, len(aggregated))
-	for _, row := range aggregated {
-		if totalExpense > 0 {
-			row.Share = (row.Amount / totalExpense) * 100
+	totalByCategoryName := map[string]float64{}
+	for _, row := range categoryTotals {
+		category := strings.TrimSpace(row.Name)
+		if category == "" {
+			continue
 		}
-		rows = append(rows, *row)
+		totalByCategoryName[category] = float64(row.Money)
+	}
+
+	rows := make([]ExpenseCategoryRow, 0, len(totalByCategoryName))
+	for accountID, meta := range accountMeta {
+		if meta.Group != group {
+			continue
+		}
+
+		category := strings.TrimSpace(meta.Title)
+		if category == "" {
+			continue
+		}
+
+		itemsSummary, err := s.whooingClient.GetItemsOfAccountID(
+			ctx,
+			sectionID,
+			group,
+			accountID,
+			startDate,
+			endDate,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		items := make([]ExpenseItem, 0, len(itemsSummary))
+		itemsTotal := 0.0
+		for _, item := range itemsSummary {
+			name := strings.TrimSpace(item.Name)
+			if name == "" {
+				name = "미분류"
+			}
+			amount := float64(item.Money)
+			itemsTotal += amount
+			items = append(items, ExpenseItem{
+				Item:   name,
+				Amount: amount,
+			})
+		}
+
+		sort.Slice(items, func(i int, j int) bool {
+			if items[i].Amount == items[j].Amount {
+				return items[i].Item < items[j].Item
+			}
+			return items[i].Amount > items[j].Amount
+		})
+
+		amount, ok := totalByCategoryName[category]
+		if !ok {
+			amount = itemsTotal
+		}
+		if amount == 0 && len(items) == 0 {
+			continue
+		}
+
+		row := ExpenseCategoryRow{
+			Category: category,
+			Amount:   amount,
+			Items:    items,
+		}
+		if totalAmount > 0 {
+			row.Share = (row.Amount / totalAmount) * 100
+		}
+		rows = append(rows, row)
 	}
 
 	sort.Slice(rows, func(i int, j int) bool {
@@ -284,98 +307,101 @@ func aggregateExpenseCategories(entries []whooing.Entry, accountMeta map[string]
 		return rows[i].Amount > rows[j].Amount
 	})
 
-	return rows
+	return rows, nil
 }
 
-func buildDailyExpenseTrend(entries []whooing.Entry, startDate time.Time, endDate time.Time) ([]DailyTrendPoint, error) {
-	dailySums := map[string]float64{}
-	for _, entry := range entries {
-		amount := float64(entry.Money)
-		if amount <= 0 {
-			continue
-		}
-
-		entryDate, err := parseEntryDate(string(entry.EntryDate))
-		if err != nil {
-			return nil, err
-		}
-		key := entryDate.Format("2006-01-02")
-		dailySums[key] += amount
+func (s Service) dailyCashflowTrend(
+	ctx context.Context,
+	sectionID string,
+	startDate time.Time,
+	endDate time.Time,
+	accountMeta map[string]accountMeta,
+) ([]DailyCashflowPoint, error) {
+	expenseDailySums, err := s.accountGroupDailySums(ctx, sectionID, "expenses", startDate, endDate, accountMeta)
+	if err != nil {
+		return nil, err
 	}
 
-	points := make([]DailyTrendPoint, 0)
-	cumulative := 0.0
+	incomeDailySums, err := s.accountGroupDailySums(ctx, sectionID, "income", startDate, endDate, accountMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	points := make([]DailyCashflowPoint, 0, int(endDate.Sub(startDate).Hours()/24)+1)
 	for current := startDate; !current.After(endDate); current = current.AddDate(0, 0, 1) {
 		key := current.Format("2006-01-02")
-		cumulative += dailySums[key]
-		points = append(points, DailyTrendPoint{
-			Label:             current.Format("01.02"),
-			CumulativeExpense: cumulative,
+		points = append(points, DailyCashflowPoint{
+			Label:   current.Format("01.02"),
+			Expense: expenseDailySums[key],
+			Income:  incomeDailySums[key],
 		})
 	}
 
 	return points, nil
 }
 
-func aggregateExpenseItems(entries []whooing.Entry) []ExpenseItem {
-	aggregated := map[string]*ExpenseItem{}
-	for _, entry := range entries {
-		item := strings.TrimSpace(entry.Item)
-		if item == "" {
-			item = "미분류"
+func (s Service) accountGroupDailySums(
+	ctx context.Context,
+	sectionID string,
+	group string,
+	startDate time.Time,
+	endDate time.Time,
+	accountMeta map[string]accountMeta,
+) (map[string]float64, error) {
+	dailySums := map[string]float64{}
+	start := startDate.Format("20060102")
+	end := endDate.Format("20060102")
+
+	for accountID, meta := range accountMeta {
+		if meta.Group != group || strings.TrimSpace(accountID) == "" {
+			continue
 		}
 
-		if _, ok := aggregated[item]; !ok {
-			aggregated[item] = &ExpenseItem{Item: item}
+		changes, err := s.whooingClient.GetChangesOfAccountID(ctx, sectionID, group, accountID, start, end)
+		if err != nil {
+			return nil, err
 		}
-		aggregated[item].Amount += float64(entry.Money)
-		aggregated[item].Count++
-	}
 
-	rows := make([]ExpenseItem, 0, len(aggregated))
-	for _, item := range aggregated {
-		rows = append(rows, *item)
-	}
+		for _, row := range changes.Rows {
+			changeDate, err := parseEntryDate(string(row.Date))
+			if err != nil {
+				return nil, err
+			}
 
-	sort.Slice(rows, func(i int, j int) bool {
-		if rows[i].Amount == rows[j].Amount {
-			return rows[i].Item < rows[j].Item
+			key := changeDate.Format("2006-01-02")
+			dailySums[key] += float64(row.Money)
 		}
-		return rows[i].Amount > rows[j].Amount
-	})
-
-	if len(rows) > 6 {
-		return rows[:6]
 	}
 
-	return rows
+	return dailySums, nil
 }
 
-func topExpenseTransactions(entries []whooing.Entry, accountMeta map[string]accountMeta) []ExpenseEntry {
-	rows := make([]ExpenseEntry, 0, len(entries))
-	for _, entry := range entries {
-		categoryAccountID, categoryGroup := expenseCategoryAccount(entry, accountMeta)
-		rows = append(rows, ExpenseEntry{
-			EntryID:      entry.EntryID,
-			EntryDate:    string(entry.EntryDate),
-			Item:         entry.Item,
-			Amount:       float64(entry.Money),
-			Account:      categoryGroup,
-			AccountID:    categoryAccountID,
-			AccountTitle: displayAccountTitle(accountMeta, categoryAccountID, entry.LAccount),
-			Memo:         entry.Memo,
-		})
+func expenseItemTitle(item string) string {
+	normalized := strings.TrimSpace(item)
+	if normalized == "" {
+		return "미분류"
 	}
 
-	sort.Slice(rows, func(i int, j int) bool {
-		return rows[i].Amount > rows[j].Amount
-	})
+	return normalized
+}
 
-	if len(rows) > 8 {
-		return rows[:8]
+func expenseItemGroupTitle(item string) string {
+	normalized := strings.TrimSpace(item)
+	if normalized == "" {
+		return "미분류"
 	}
 
-	return rows
+	index := strings.Index(normalized, "(")
+	if index <= 0 {
+		return normalized
+	}
+
+	group := strings.TrimSpace(normalized[:index])
+	if group == "" {
+		return normalized
+	}
+
+	return group
 }
 
 type accountMeta struct {
@@ -409,37 +435,6 @@ func addAccountMeta(meta map[string]accountMeta, accounts []whooing.Account, gro
 			Group: group,
 		}
 	}
-}
-
-func expenseCategoryTitle(entry whooing.Entry, accountMeta map[string]accountMeta) string {
-	accountID, _ := expenseCategoryAccount(entry, accountMeta)
-	if accountID == "" {
-		item := strings.TrimSpace(entry.Item)
-		if item == "" {
-			return "미분류"
-		}
-		return item
-	}
-
-	return displayAccountTitle(accountMeta, accountID, "미분류")
-}
-
-func expenseCategoryAccount(entry whooing.Entry, accountMeta map[string]accountMeta) (string, string) {
-	if meta, ok := accountMeta[entry.LAccountID]; ok && meta.Group == "expenses" {
-		return entry.LAccountID, meta.Group
-	}
-	if meta, ok := accountMeta[entry.RAccountID]; ok && meta.Group == "expenses" {
-		return entry.RAccountID, meta.Group
-	}
-	return "", ""
-}
-
-func displayAccountTitle(meta map[string]accountMeta, accountID string, fallback string) string {
-	if item, ok := meta[accountID]; ok && strings.TrimSpace(item.Title) != "" {
-		return item.Title
-	}
-
-	return fallback
 }
 
 func normalizeMonth(value string, now time.Time) time.Time {

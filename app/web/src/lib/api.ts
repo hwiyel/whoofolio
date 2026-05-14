@@ -86,17 +86,17 @@ export interface MonthlyReportResponse {
   incomeDelta: number;
   expenseDelta: number;
   netCashflowDelta: number;
-  dailyExpenseTrend: DailyTrendPoint[];
+  dailyCashflowTrend: DailyCashflowPoint[];
   monthlyExpenseTrend: MonthlyTrendPoint[];
   monthlyIncomeTrend: MonthlyIncomePoint[];
   expenseCategories: ExpenseCategoryRow[];
-  topExpenseItems: MonthlyExpenseItem[];
-  bigTransactions: MonthlyExpenseTransaction[];
+  incomeCategories: ExpenseCategoryRow[];
 }
 
-export interface DailyTrendPoint {
+export interface DailyCashflowPoint {
   label: string;
-  cumulativeExpense: number;
+  expense: number;
+  income: number;
 }
 
 export interface MonthlyTrendPoint {
@@ -113,24 +113,12 @@ export interface ExpenseCategoryRow {
   category: string;
   amount: number;
   share: number;
-  count: number;
+  items: MonthlyExpenseItem[];
 }
 
 export interface MonthlyExpenseItem {
   item: string;
   amount: number;
-  count: number;
-}
-
-export interface MonthlyExpenseTransaction {
-  entryId: number;
-  entryDate: string;
-  item: string;
-  amount: number;
-  account: string;
-  accountId: string;
-  accountTitle: string;
-  memo: string;
 }
 
 export type OverviewTrendRange = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y";

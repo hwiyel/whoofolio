@@ -41,6 +41,11 @@ type ReportSummaryResponse struct {
 	NetIncome float64 `json:"net_income"`
 }
 
+type NameMoneyRow struct {
+	Name  string         `json:"name"`
+	Money FlexibleNumber `json:"money"`
+}
+
 type BalanceTrendResponse struct {
 	RowsType  string                     `json:"rows_type"`
 	Rows      map[string]BalanceTrendRow `json:"rows"`
@@ -58,6 +63,22 @@ type BalanceTrendAggregate struct {
 	Assets      FlexibleNumber `json:"assets"`
 	Liabilities FlexibleNumber `json:"liabilities"`
 	Capital     FlexibleNumber `json:"capital"`
+}
+
+type AccountDailyChangesResponse struct {
+	RowsType  string                   `json:"rows_type"`
+	Rows      []AccountDailyChangeRow  `json:"rows"`
+	Aggregate AccountDailyChangeTotals `json:"aggregate"`
+}
+
+type AccountDailyChangeRow struct {
+	Date  FlexibleString `json:"date"`
+	Money FlexibleNumber `json:"money"`
+}
+
+type AccountDailyChangeTotals struct {
+	In  FlexibleNumber `json:"in"`
+	Out FlexibleNumber `json:"out"`
 }
 
 type EntriesResponse struct {

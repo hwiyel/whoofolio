@@ -67,6 +67,58 @@ func (c Client) GetEntries(ctx context.Context, params url.Values) (EntriesRespo
 	return fetch[EntriesResponse](ctx, c, "/entries.json", params)
 }
 
+func (c Client) GetAccountIDsOfAccount(
+	ctx context.Context,
+	sectionID string,
+	account string,
+	startDate string,
+	endDate string,
+) ([]NameMoneyRow, error) {
+	query := url.Values{}
+	query.Set("section_id", sectionID)
+	query.Set("account", account)
+	query.Set("start_date", startDate)
+	query.Set("end_date", endDate)
+
+	return fetch[[]NameMoneyRow](ctx, c, "/entries/account_ids_of_account.json", query)
+}
+
+func (c Client) GetItemsOfAccountID(
+	ctx context.Context,
+	sectionID string,
+	account string,
+	accountID string,
+	startDate string,
+	endDate string,
+) ([]NameMoneyRow, error) {
+	query := url.Values{}
+	query.Set("section_id", sectionID)
+	query.Set("account", account)
+	query.Set("account_id", accountID)
+	query.Set("start_date", startDate)
+	query.Set("end_date", endDate)
+
+	return fetch[[]NameMoneyRow](ctx, c, "/entries/items_of_account_id.json", query)
+}
+
+func (c Client) GetChangesOfAccountID(
+	ctx context.Context,
+	sectionID string,
+	account string,
+	accountID string,
+	startDate string,
+	endDate string,
+) (AccountDailyChangesResponse, error) {
+	query := url.Values{}
+	query.Set("section_id", sectionID)
+	query.Set("account", account)
+	query.Set("account_id", accountID)
+	query.Set("start_date", startDate)
+	query.Set("end_date", endDate)
+
+	return fetch[AccountDailyChangesResponse](ctx, c, "/entries/changes_of_account_id.json", query)
+}
+
 func fetch[T any](ctx context.Context, client Client, path string, query url.Values) (T, error) {
 	var zero T
 

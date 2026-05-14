@@ -78,7 +78,7 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+      <section className="app-card space-y-4 rounded-3xl p-6">
         <div className="flex flex-wrap gap-2">
           {datePresets.map((preset) => {
             const isActive = activePreset?.id === preset.id;
@@ -86,10 +86,10 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
             return (
               <button
                 key={preset.id}
-                className={`rounded-full border px-4 py-2 text-sm transition ${
+                className={`app-pill rounded-full px-4 py-2 text-sm transition ${
                   isActive
-                    ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-100"
-                    : "border-white/10 bg-white/5 text-stone-300 hover:border-white/20 hover:bg-white/10"
+                    ? "app-pill-active-income"
+                    : ""
                 }`}
                 onClick={() => {
                   setFilters((current) => ({
@@ -107,9 +107,9 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,0.85fr))_minmax(0,1.2fr)]">
         <label className="space-y-2">
-          <span className="text-sm text-stone-400">시작일</span>
+          <span className="app-muted text-sm">시작일</span>
           <input
-            className="w-full rounded-2xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/40"
+            className="app-input w-full rounded-2xl px-4 py-3 text-sm outline-none transition"
             onChange={(event) => {
               setFilters((current) => ({
                 ...current,
@@ -121,9 +121,9 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
           />
         </label>
         <label className="space-y-2">
-          <span className="text-sm text-stone-400">종료일</span>
+          <span className="app-muted text-sm">종료일</span>
           <input
-            className="w-full rounded-2xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/40"
+            className="app-input w-full rounded-2xl px-4 py-3 text-sm outline-none transition"
             onChange={(event) => {
               setFilters((current) => ({
                 ...current,
@@ -135,9 +135,9 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
           />
         </label>
         <label className="space-y-2">
-          <span className="text-sm text-stone-400">계정</span>
+          <span className="app-muted text-sm">계정</span>
           <select
-            className="w-full rounded-2xl border border-white/10 bg-stone-950 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/40"
+            className="app-select w-full rounded-2xl px-4 py-3 text-sm outline-none transition"
             onChange={(event) => {
               setFilters((current) => ({
                 ...current,
@@ -155,10 +155,10 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
           </select>
         </label>
         <label className="space-y-2">
-          <span className="text-sm text-stone-400">키워드</span>
+          <span className="app-muted text-sm">키워드</span>
           <div className="relative">
             <input
-              className="w-full rounded-2xl border border-white/10 bg-stone-950 px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-emerald-400/40"
+              className="app-input w-full rounded-2xl px-4 py-3 pr-12 text-sm outline-none transition"
               onChange={(event) => {
                 setFilters((current) => ({
                   ...current,
@@ -171,7 +171,7 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
             />
             {filters.keyword ? (
               <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs text-stone-400 transition hover:bg-white/10 hover:text-white"
+                className="app-chip-button absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs transition"
                 onClick={() => {
                   setFilters((current) => ({
                     ...current,
@@ -187,12 +187,12 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
         </label>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-          <p className="text-sm text-stone-400">
+        <div className="app-divider flex flex-wrap items-center justify-between gap-3 pt-4">
+          <p className="app-muted text-sm">
             기본값은 이번 달 전체 거래입니다. 계정 이동은 `출발 계정 → 도착 계정` 순서로 보여줍니다.
           </p>
           <button
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-stone-200 transition hover:border-white/20 hover:bg-white/10"
+            className="app-chip-button rounded-full px-4 py-2 text-sm transition"
             onClick={() => {
               setFilters({ ...defaultFilters });
             }}
@@ -204,15 +204,15 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
       </section>
 
       {transactionsQuery.isError ? (
-        <section className="rounded-3xl border border-rose-400/20 bg-rose-300/10 p-5 text-sm leading-6 text-rose-100">
+        <section className="app-error rounded-3xl p-5 text-sm leading-6">
           거래 데이터를 읽는 중 오류가 발생했습니다.
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+      <section className="app-table-shell overflow-hidden rounded-3xl">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-[0.18em] text-stone-500">
+            <thead className="app-table-head text-left text-xs uppercase tracking-[0.18em]">
               <tr>
                 <th className="px-5 py-4 font-medium">일자</th>
                 <th className="px-5 py-4 font-medium">항목</th>
@@ -225,7 +225,7 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
               {transactionsQuery.isLoading ? (
                 <tr>
                   <td
-                    className="px-5 py-10 text-center text-sm text-stone-400"
+                    className="app-muted px-5 py-10 text-center text-sm"
                     colSpan={5}
                   >
                     거래 데이터를 불러오는 중입니다.
@@ -234,7 +234,7 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
               ) : rows.length === 0 ? (
                 <tr>
                   <td
-                    className="px-5 py-10 text-center text-sm text-stone-400"
+                    className="app-muted px-5 py-10 text-center text-sm"
                     colSpan={5}
                   >
                     표시할 거래가 없습니다.
@@ -244,24 +244,24 @@ export function TransactionsPage({ focusAccount }: TransactionsPageProps) {
                 rows.map((row) => (
                   <tr
                     key={row.entryId}
-                    className="border-t border-white/6 text-sm text-stone-200"
+                    className="app-table-row text-sm"
                   >
-                    <td className="px-5 py-4 align-top text-stone-400">
+                    <td className="app-muted px-5 py-4 align-top">
                       {formatEntryDate(row.entryDate)}
                     </td>
                     <td className="px-5 py-4 align-top">
                       <div className="space-y-1">
-                        <p className="font-medium text-white">{row.item || "-"}</p>
-                        <p className="min-h-4 text-xs text-stone-500">{row.memo}</p>
+                        <p className="app-heading font-medium">{row.item || "-"}</p>
+                        <p className="app-muted min-h-4 text-xs">{row.memo}</p>
                       </div>
                     </td>
                     <td className="px-5 py-4 align-top">
-                      <p className="font-medium text-white">{formatAccountFlow(row)}</p>
+                      <p className="app-heading font-medium">{formatAccountFlow(row)}</p>
                     </td>
-                    <td className="px-5 py-4 text-right align-top font-medium text-white">
+                    <td className="app-heading px-5 py-4 text-right align-top font-medium">
                       {formatMoney(row.money)}
                     </td>
-                    <td className="px-5 py-4 text-right align-top text-stone-300">
+                    <td className="app-muted-strong px-5 py-4 text-right align-top">
                       {formatMoney(row.runningTotal)}
                     </td>
                   </tr>

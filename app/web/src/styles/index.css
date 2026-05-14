@@ -1,15 +1,52 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
 @import "tailwindcss";
 
 :root {
   color-scheme: dark;
   font-family:
-    "IBM Plex Sans KR",
     "Pretendard",
     system-ui,
     sans-serif;
-  background:
+  --app-bg:
     radial-gradient(circle at top, rgba(16, 185, 129, 0.14), transparent 28%),
     linear-gradient(180deg, #0c0a09 0%, #1c1917 100%);
+  --app-text: #f5f5f4;
+  --app-text-muted: #a8a29e;
+  --app-text-subtle: #d6d3d1;
+  --app-card-bg: rgba(255, 255, 255, 0.05);
+  --app-card-subtle-bg: rgba(12, 10, 9, 0.6);
+  --app-card-border: rgba(255, 255, 255, 0.1);
+  --app-card-border-soft: rgba(255, 255, 255, 0.08);
+  --app-divider: rgba(255, 255, 255, 0.1);
+  --app-track: rgba(255, 255, 255, 0.05);
+  --app-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  --app-button-bg: rgba(255, 255, 255, 0.05);
+  --app-button-border: rgba(255, 255, 255, 0.1);
+  --app-button-text: #d6d3d1;
+  --app-settings-bg: rgba(28, 25, 23, 0.96);
+  --app-settings-border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --app-bg:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 24%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  --app-text: #0f172a;
+  --app-text-muted: #64748b;
+  --app-text-subtle: #334155;
+  --app-card-bg: rgba(255, 255, 255, 0.84);
+  --app-card-subtle-bg: rgba(255, 255, 255, 0.78);
+  --app-card-border: rgba(148, 163, 184, 0.28);
+  --app-card-border-soft: rgba(148, 163, 184, 0.22);
+  --app-divider: rgba(148, 163, 184, 0.24);
+  --app-track: rgba(148, 163, 184, 0.14);
+  --app-shadow: 0 18px 40px rgba(148, 163, 184, 0.18);
+  --app-button-bg: rgba(255, 255, 255, 0.9);
+  --app-button-border: rgba(148, 163, 184, 0.3);
+  --app-button-text: #334155;
+  --app-settings-bg: rgba(255, 255, 255, 0.98);
+  --app-settings-border: rgba(148, 163, 184, 0.26);
 }
 
 body {
@@ -26,3 +63,218 @@ a {
   color: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
+.app-theme {
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.app-header {
+  border-bottom: 1px solid var(--app-divider);
+}
+
+.app-heading {
+  color: var(--app-text);
+}
+
+.app-muted {
+  color: var(--app-text-muted);
+}
+
+.app-muted-strong {
+  color: var(--app-text-subtle);
+}
+
+.app-tone-neutral {
+  color: var(--app-text);
+}
+
+.app-tone-positive {
+  color: #86efac;
+}
+
+.app-tone-negative {
+  color: #fda4af;
+}
+
+[data-theme="light"] .app-tone-positive {
+  color: #15803d;
+}
+
+[data-theme="light"] .app-tone-negative {
+  color: #be123c;
+}
+
+.app-card {
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-card-border);
+  box-shadow: var(--app-shadow);
+}
+
+.app-card-subtle {
+  background: var(--app-card-subtle-bg);
+  border: 1px solid var(--app-card-border-soft);
+}
+
+.app-divider {
+  border-bottom: 1px solid var(--app-divider);
+}
+
+.app-empty {
+  background: var(--app-card-subtle-bg);
+  border: 1px solid var(--app-card-border-soft);
+  color: var(--app-text-muted);
+}
+
+.app-progress-track {
+  background: var(--app-track);
+}
+
+.app-nav-button,
+.app-icon-button,
+.app-pill,
+.app-more-button,
+.app-input,
+.app-select,
+.app-chip-button {
+  background: var(--app-button-bg);
+  border: 1px solid var(--app-button-border);
+  color: var(--app-button-text);
+}
+
+.app-nav-button:hover,
+.app-icon-button:hover,
+.app-pill:hover,
+.app-more-button:hover,
+.app-chip-button:hover {
+  filter: brightness(0.98);
+}
+
+.app-input,
+.app-select {
+  color: var(--app-text);
+}
+
+.app-input::placeholder {
+  color: var(--app-text-muted);
+}
+
+.app-input:focus,
+.app-select:focus {
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.app-nav-button-active,
+.app-pill-active-income {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.14);
+  color: #ecfdf5;
+  box-shadow: 0 10px 30px rgba(52, 211, 153, 0.18);
+}
+
+[data-theme="light"] .app-nav-button-active,
+[data-theme="light"] .app-pill-active-income {
+  color: #065f46;
+}
+
+.app-pill-active-expense {
+  border-color: rgba(251, 146, 60, 0.45);
+  background: rgba(251, 146, 60, 0.14);
+  color: #fff7ed;
+  box-shadow: 0 10px 30px rgba(251, 146, 60, 0.18);
+}
+
+[data-theme="light"] .app-pill-active-expense {
+  color: #9a3412;
+}
+
+.app-settings-panel {
+  background: var(--app-settings-bg);
+  border: 1px solid var(--app-settings-border);
+  box-shadow: var(--app-shadow);
+}
+
+.app-table-shell {
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-card-border);
+  box-shadow: var(--app-shadow);
+}
+
+.app-table-head {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--app-text-muted);
+}
+
+[data-theme="light"] .app-table-head {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.app-table-row {
+  border-top: 1px solid var(--app-card-border-soft);
+  color: var(--app-text-subtle);
+}
+
+.app-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.28);
+}
+
+.app-warning {
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  background: rgba(252, 211, 77, 0.16);
+  color: #fef3c7;
+}
+
+[data-theme="light"] .app-warning {
+  color: #92400e;
+}
+
+.app-error {
+  border: 1px solid rgba(244, 63, 94, 0.24);
+  background: rgba(251, 113, 133, 0.12);
+  color: #ffe4e6;
+}
+
+[data-theme="light"] .app-error {
+  color: #9f1239;
+}
+
+.app-overlay {
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 32%),
+    rgba(12, 10, 9, 0.74);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="light"] .app-overlay {
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.1), transparent 30%),
+    rgba(248, 250, 252, 0.8);
+}
+
+.app-overlay-card {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    var(--app-card-bg);
+  border: 1px solid var(--app-card-border);
+  box-shadow: var(--app-shadow);
+}
+
+[data-theme="light"] .app-overlay-card {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.9)),
+    var(--app-card-bg);
+}
+
+.app-hero-button {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #ecfdf5;
+  box-shadow: 0 16px 30px rgba(16, 185, 129, 0.22);
+}
+
+.app-hero-button:hover {
+  filter: brightness(1.03);
+}

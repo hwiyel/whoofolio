@@ -18,6 +18,7 @@
 2. 필수 값 설정:
 - `WHOOING_API_KEY`
 - `PORT` (예: `18080`)
+- `VITE_API_PROXY_TARGET` (예: `http://127.0.0.1:18080`)
 
 ## 로컬 실행
 
@@ -32,6 +33,17 @@ bash scripts/build-web.sh
 ```bash
 bash scripts/run-api.sh
 ```
+
+`go run ./cmd/server`를 직접 실행해도 루트 `.env`를 자동으로 읽습니다.
+
+### 3) 프론트 개발 서버 실행
+
+```bash
+cd app/web
+npm run dev
+```
+
+Vite 개발 서버는 루트 `.env`를 읽고, `/api` 요청을 `VITE_API_PROXY_TARGET`으로 프록시합니다.
 
 브라우저에서 `http://127.0.0.1:<PORT>`로 접속합니다.
 

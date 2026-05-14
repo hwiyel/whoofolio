@@ -1,13 +1,12 @@
 import {
   Area,
   AreaChart,
-  CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis
+  XAxis
 } from "recharts";
 
+import type { ThemeMode } from "../app/App";
 import type {
   OverviewTrendPoint,
   OverviewTrendRange,
@@ -17,8 +16,10 @@ import type {
 interface OverviewTrendChartProps {
   activeRange: OverviewTrendRange;
   data?: OverviewTrendResponse;
+  hideAmounts: boolean;
   isLoading: boolean;
   onChangeRange: (range: OverviewTrendRange) => void;
+  theme: ThemeMode;
 }
 
 const ranges: OverviewTrendRange[] = ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
@@ -26,103 +27,96 @@ const ranges: OverviewTrendRange[] = ["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
 export function OverviewTrendChart({
   activeRange,
   data,
+  hideAmounts,
   isLoading,
-  onChangeRange
+  onChangeRange,
+  theme
 }: OverviewTrendChartProps) {
   const points = data?.points ?? [];
+  const chartTheme = getChartTheme(theme);
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] xl:p-8">
-      <div className="flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.24em] text-stone-500">Net Worth</p>
-          <h2 className="text-3xl font-semibold tracking-tight text-white">
-            {formatMoney(data?.currentValue)}
-          </h2>
-          <p className={`${changeTone(data?.changeValue)} text-sm`}>
-            {formatSignedMoney(data?.changeValue)} | {formatChangeRate(data?.currentValue, data?.changeValue)} · 지난{" "}
-            {formatRangeLabel(activeRange)}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {ranges.map((range) => (
-            <button
-              key={range}
-              className={`rounded-full border px-3 py-2 text-xs tracking-[0.18em] transition ${
-                range === activeRange
-                  ? "border-emerald-300/50 bg-emerald-300/15 text-emerald-50 shadow-[0_10px_30px_rgba(52,211,153,0.18)]"
-                  : "border-white/10 bg-white/5 text-stone-400 hover:border-white/20 hover:bg-white/10"
-              }`}
-              onClick={() => onChangeRange(range)}
-              type="button"
-            >
-              {range}
-            </button>
-          ))}
-        </div>
+    <section>
+      <div className="max-w-[420px] space-y-1 pl-10">
+        <p className="app-muted text-sm">순자산</p>
+        <h2 className="app-heading text-4xl font-semibold tracking-tight md:text-5xl">
+          {formatMoney(data?.currentValue, hideAmounts)}
+        </h2>
+        <p className={`${changeTone(data?.changeValue)} text-sm`}>
+          {formatSignedMoney(data?.changeValue, hideAmounts)} | {formatChangeRate(data?.currentValue, data?.changeValue)} · 지난{" "}
+          {formatRangeLabel(activeRange)}
+        </p>
       </div>
 
-      <div className="mt-6 h-[400px] xl:h-[460px]">
+      <div className="mt-2 h-[300px] pb-2">
         {isLoading ? (
-          <div className="flex h-full items-center justify-center text-sm text-stone-400">
+          <div className="app-muted flex h-full items-center justify-center text-sm">
             차트 데이터를 불러오는 중입니다.
           </div>
         ) : points.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-stone-400">
+          <div className="app-muted flex h-full items-center justify-center text-sm">
             표시할 추이 데이터가 없습니다.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points} margin={{ top: 10, right: 18, left: 0, bottom: 0 }}>
+            <AreaChart data={points} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
               <defs>
                 <linearGradient id="capitalFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.42} />
-                  <stop offset="100%" stopColor="#34d399" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.24} />
+                  <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(255,255,255,0.07)" vertical={false} />
-              <XAxis
-                axisLine={false}
-                dataKey="label"
-                tick={{ fill: "#78716c", fontSize: 12 }}
-                tickLine={false}
-              />
-              <YAxis
-                axisLine={false}
-                tick={{ fill: "#78716c", fontSize: 12 }}
-                tickFormatter={formatAxisMoney}
-                tickLine={false}
-                width={70}
-              />
+              <XAxis dataKey="label" hide />
               <Tooltip
                 contentStyle={{
-                  background: "#1c1917",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: chartTheme.tooltipBackground,
+                  border: `1px solid ${chartTheme.tooltipBorder}`,
                   borderRadius: "16px",
-                  color: "#fafaf9"
+                  color: chartTheme.tooltipText
                 }}
-                cursor={{ stroke: "rgba(255,255,255,0.12)", strokeDasharray: "4 4" }}
-                formatter={(value) => [formatMoney(Number(value)), "순자산"]}
+                cursor={{ stroke: chartTheme.cursor, strokeDasharray: "4 4" }}
+                formatter={(value) => [formatMoney(Number(value), hideAmounts), "순자산"]}
                 labelFormatter={(label) => `${label}`}
-                labelStyle={{ color: "#a8a29e" }}
+                labelStyle={{ color: chartTheme.tick }}
               />
               <Area
                 dataKey="capital"
                 fill="url(#capitalFill)"
                 fillOpacity={1}
                 stroke="#2dd4bf"
-                strokeWidth={2.75}
+                strokeWidth={2.4}
                 type="monotone"
               />
             </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
+
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {ranges.map((range) => (
+          <button
+            key={range}
+            className={`app-pill rounded-full px-2.5 py-1.5 text-[11px] tracking-[0.12em] transition ${
+              range === activeRange
+                ? "app-pill-active-income"
+                : ""
+            }`}
+            onClick={() => onChangeRange(range)}
+            type="button"
+          >
+            {range}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }
 
-function formatMoney(value?: number) {
+function formatMoney(value?: number, hidden = false) {
+  if (hidden) {
+    return "••••••";
+  }
+
   if (typeof value !== "number") {
     return "-";
   }
@@ -134,7 +128,11 @@ function formatMoney(value?: number) {
   );
 }
 
-function formatSignedMoney(value?: number) {
+function formatSignedMoney(value?: number, hidden = false) {
+  if (hidden) {
+    return "••••••";
+  }
+
   if (typeof value !== "number") {
     return "-";
   }
@@ -143,7 +141,11 @@ function formatSignedMoney(value?: number) {
   return `${prefix}${formatMoney(value)}`;
 }
 
-function formatAxisMoney(value: number) {
+function formatAxisMoney(value: number, hidden = false) {
+  if (hidden) {
+    return "•••";
+  }
+
   const abs = Math.abs(value);
   if (abs >= 100000000) {
     return `${(value / 100000000).toFixed(1)}억`;
@@ -157,16 +159,16 @@ function formatAxisMoney(value: number) {
 
 function changeTone(value?: number) {
   if (typeof value !== "number") {
-    return "text-stone-400";
+    return "app-muted";
   }
   if (value > 0) {
-    return "text-emerald-300";
+    return "app-tone-positive";
   }
   if (value < 0) {
-    return "text-rose-300";
+    return "app-tone-negative";
   }
 
-  return "text-stone-400";
+  return "app-muted";
 }
 
 function formatChangeRate(currentValue?: number, changeValue?: number) {
@@ -203,4 +205,26 @@ function formatRangeLabel(value: OverviewTrendRange) {
     default:
       return value;
   }
+}
+
+function getChartTheme(theme: ThemeMode) {
+  if (theme === "light") {
+    return {
+      cursor: "rgba(15,23,42,0.12)",
+      grid: "rgba(15,23,42,0.08)",
+      tick: "#64748b",
+      tooltipBackground: "#ffffff",
+      tooltipBorder: "rgba(148,163,184,0.35)",
+      tooltipText: "#0f172a"
+    };
+  }
+
+  return {
+    cursor: "rgba(255,255,255,0.12)",
+    grid: "rgba(255,255,255,0.07)",
+    tick: "#78716c",
+    tooltipBackground: "#1c1917",
+    tooltipBorder: "rgba(255,255,255,0.1)",
+    tooltipText: "#fafaf9"
+  };
 }

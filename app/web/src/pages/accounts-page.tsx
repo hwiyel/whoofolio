@@ -36,13 +36,13 @@ export function AccountsPage({ onOpenTransactions }: AccountsPageProps) {
   return (
     <section className="flex flex-col gap-6">
       {accountsQuery.isError || transactionsQuery.isError ? (
-        <section className="rounded-3xl border border-rose-400/20 bg-rose-300/10 p-5 text-sm leading-6 text-rose-100">
+        <section className="app-error rounded-3xl p-5 text-sm leading-6">
           계정 화면 데이터를 읽는 중 오류가 발생했습니다.
         </section>
       ) : null}
 
       {accountsQuery.isLoading ? (
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center text-sm text-stone-400">
+        <section className="app-card app-muted rounded-3xl p-10 text-center text-sm">
           계정 목록을 불러오는 중입니다.
         </section>
       ) : (
@@ -50,16 +50,16 @@ export function AccountsPage({ onOpenTransactions }: AccountsPageProps) {
           {groupedAccounts.map((group) => (
             <section
               key={group.group}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6"
+              className="app-card rounded-3xl p-6"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-stone-400">{group.label}</p>
-                  <h3 className="mt-1 text-xl font-semibold text-white">
+                  <p className="app-muted text-sm">{group.label}</p>
+                  <h3 className="app-heading mt-1 text-xl font-semibold">
                     {group.accounts.length}개 계정
                   </h3>
                 </div>
-                <p className="text-sm text-stone-500">총 {accounts.length}개</p>
+                <p className="app-muted text-sm">총 {accounts.length}개</p>
               </div>
 
               <div className="mt-5 space-y-3">
@@ -69,13 +69,13 @@ export function AccountsPage({ onOpenTransactions }: AccountsPageProps) {
                   return (
                     <button
                       key={account.accountId}
-                      className="flex w-full cursor-pointer flex-col gap-4 rounded-2xl border border-white/8 bg-stone-950/70 p-4 text-left transition hover:border-white/20 hover:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-emerald-300/40 md:flex-row md:items-center md:justify-between"
+                      className="app-card-subtle app-focus-ring flex w-full flex-col gap-4 rounded-2xl p-4 text-left transition md:flex-row md:items-center md:justify-between"
                       onClick={() => onOpenTransactions(account.accountId)}
                       type="button"
                     >
                       <div className="space-y-1">
-                        <p className="font-medium text-white">{account.title}</p>
-                        <p className="text-sm text-stone-400">
+                        <p className="app-heading font-medium">{account.title}</p>
+                        <p className="app-muted text-sm">
                           {formatAccountMeta(account, activity)}
                         </p>
                       </div>
@@ -110,8 +110,8 @@ function groupAccounts(accounts: AccountOption[]) {
   const orderedGroups: Array<{ group: string; label: string }> = [
     { group: "assets", label: "자산" },
     { group: "liabilities", label: "부채" },
-    { group: "expenses", label: "비용" },
-    { group: "income", label: "수익" }
+    { group: "expenses", label: "지출" },
+    { group: "income", label: "수입" }
   ];
 
   return orderedGroups

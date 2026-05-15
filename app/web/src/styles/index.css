@@ -25,6 +25,8 @@
   --app-button-text: #d6d3d1;
   --app-settings-bg: rgba(28, 25, 23, 0.96);
   --app-settings-border: rgba(255, 255, 255, 0.1);
+  --app-progress-income: rgba(110, 231, 183, 0.82);
+  --app-progress-expense: rgba(251, 146, 60, 0.82);
 }
 
 [data-theme="light"] {
@@ -47,6 +49,8 @@
   --app-button-text: #334155;
   --app-settings-bg: rgba(255, 255, 255, 0.98);
   --app-settings-border: rgba(148, 163, 184, 0.26);
+  --app-progress-income: rgba(16, 185, 129, 0.72);
+  --app-progress-expense: rgba(249, 115, 22, 0.72);
 }
 
 body {
@@ -131,6 +135,14 @@ button {
 
 .app-progress-track {
   background: var(--app-track);
+}
+
+.app-progress-fill-income {
+  background: var(--app-progress-income);
+}
+
+.app-progress-fill-expense {
+  background: var(--app-progress-expense);
 }
 
 .app-nav-button,

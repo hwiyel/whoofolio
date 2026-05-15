@@ -91,6 +91,8 @@ export interface MonthlyReportResponse {
   monthlyIncomeTrend: MonthlyIncomePoint[];
   expenseCategories: ExpenseCategoryRow[];
   incomeCategories: ExpenseCategoryRow[];
+  yearlyIncomeSources: YearlyIncomeSource[];
+  yearlyExpenseSources: YearlyIncomeSource[];
 }
 
 export interface DailyCashflowPoint {
@@ -119,6 +121,21 @@ export interface ExpenseCategoryRow {
 export interface MonthlyExpenseItem {
   item: string;
   amount: number;
+}
+
+export interface YearlyIncomeSource {
+  year: string;
+  topSource: string;
+  topSourceAmount: number;
+  topSourceShare: number;
+  totalAmount: number;
+  sources: YearlyIncomeSourceItem[];
+}
+
+export interface YearlyIncomeSourceItem {
+  source: string;
+  amount: number;
+  share: number;
 }
 
 export type OverviewTrendRange = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y";

@@ -62,8 +62,8 @@ export function OverviewTrendChart({
             <AreaChart data={points} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
               <defs>
                 <linearGradient id="capitalFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.24} />
-                  <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                  <stop offset="0%" stopColor={chartTheme.areaStart} stopOpacity={0.24} />
+                  <stop offset="100%" stopColor={chartTheme.areaEnd} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis dataKey="label" hide />
@@ -83,7 +83,7 @@ export function OverviewTrendChart({
                 dataKey="capital"
                 fill="url(#capitalFill)"
                 fillOpacity={1}
-                stroke="#2dd4bf"
+                stroke={chartTheme.stroke}
                 strokeWidth={2.4}
                 type="monotone"
               />
@@ -215,7 +215,10 @@ function getChartTheme(theme: ThemeMode) {
       tick: "#64748b",
       tooltipBackground: "#ffffff",
       tooltipBorder: "rgba(148,163,184,0.35)",
-      tooltipText: "#0f172a"
+      tooltipText: "#0f172a",
+      areaStart: "#10b981",
+      areaEnd: "#34d399",
+      stroke: "#059669"
     };
   }
 
@@ -225,6 +228,9 @@ function getChartTheme(theme: ThemeMode) {
     tick: "#78716c",
     tooltipBackground: "#1c1917",
     tooltipBorder: "rgba(255,255,255,0.1)",
-    tooltipText: "#fafaf9"
+    tooltipText: "#fafaf9",
+    areaStart: "#2dd4bf",
+    areaEnd: "#34d399",
+    stroke: "#2dd4bf"
   };
 }

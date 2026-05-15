@@ -7,6 +7,7 @@
 - `product/vision.md`: 제품 목표, 범위, MVP 원칙
 - `product/screens.md`: 정보구조와 핵심 화면 설계
 - `product/reports.md`: 1차 보고서 범위와 구현 순서
+- `product/reports-implementation.md`: 보고서 기능의 현재 구현 방식과 API 선택 메모
 - `architecture/system-design.md`: 시스템 구성, 데이터 흐름, 기술 스택
 - `architecture/stack-decisions.md`: 기술별 역할과 선택 이유
 - `architecture/project-structure.md`: 초기 폴더 구조 제안

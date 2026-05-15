@@ -41,6 +41,47 @@ type ReportSummaryResponse struct {
 	NetIncome float64 `json:"net_income"`
 }
 
+type ReportSummaryTrendResponse struct {
+	RowsType  string                           `json:"rows_type"`
+	Rows      map[string]ReportSummaryTrendRow `json:"rows"`
+	Aggregate ReportSummaryAggregate           `json:"aggregate"`
+}
+
+type ReportSummaryTrendRow struct {
+	Date      FlexibleString `json:"date"`
+	Expenses  FlexibleNumber `json:"expenses"`
+	Income    FlexibleNumber `json:"income"`
+	NetIncome FlexibleNumber `json:"net_income"`
+}
+
+type ReportSummaryAggregate struct {
+	Expenses  FlexibleNumber `json:"expenses"`
+	Income    FlexibleNumber `json:"income"`
+	NetIncome FlexibleNumber `json:"net_income"`
+}
+
+type ReportAccountResponse struct {
+	RowsType  string                      `json:"rows_type"`
+	Rows      map[string]ReportAccountRow `json:"rows"`
+	Aggregate ReportAccountAggregate      `json:"aggregate"`
+}
+
+type ReportAccountRow struct {
+	Date    FlexibleString      `json:"date"`
+	Income  *ReportAccountGroup `json:"income,omitempty"`
+	Expense *ReportAccountGroup `json:"expenses,omitempty"`
+}
+
+type ReportAccountAggregate struct {
+	Income  *ReportAccountGroup `json:"income,omitempty"`
+	Expense *ReportAccountGroup `json:"expenses,omitempty"`
+}
+
+type ReportAccountGroup struct {
+	Total    FlexibleNumber            `json:"total"`
+	Accounts map[string]FlexibleNumber `json:"accounts"`
+}
+
 type NameMoneyRow struct {
 	Name  string         `json:"name"`
 	Money FlexibleNumber `json:"money"`

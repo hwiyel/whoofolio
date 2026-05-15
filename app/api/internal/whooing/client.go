@@ -52,6 +52,23 @@ func (c Client) GetMonthlySummary(ctx context.Context, sectionID string, startDa
 	return fetch[ReportSummaryResponse](ctx, c, "/report_summary.json", query)
 }
 
+func (c Client) GetIncomeExpenseTrend(
+	ctx context.Context,
+	sectionID string,
+	rowsType string,
+	startDate string,
+	endDate string,
+) (ReportSummaryTrendResponse, error) {
+	query := url.Values{}
+	query.Set("section_id", sectionID)
+	query.Set("account", "expenses,income")
+	query.Set("rows_type", rowsType)
+	query.Set("start_date", startDate)
+	query.Set("end_date", endDate)
+
+	return fetch[ReportSummaryTrendResponse](ctx, c, "/report_summary.json", query)
+}
+
 func (c Client) GetBalanceTrend(ctx context.Context, sectionID string, rowsType string, startDate string, endDate string) (BalanceTrendResponse, error) {
 	query := url.Values{}
 	query.Set("section_id", sectionID)
@@ -61,6 +78,23 @@ func (c Client) GetBalanceTrend(ctx context.Context, sectionID string, rowsType 
 	query.Set("end_date", endDate)
 
 	return fetch[BalanceTrendResponse](ctx, c, "/report_summary.json", query)
+}
+
+func (c Client) GetAccountReport(
+	ctx context.Context,
+	sectionID string,
+	account string,
+	rowsType string,
+	startDate string,
+	endDate string,
+) (ReportAccountResponse, error) {
+	query := url.Values{}
+	query.Set("section_id", sectionID)
+	query.Set("rows_type", rowsType)
+	query.Set("start_date", startDate)
+	query.Set("end_date", endDate)
+
+	return fetch[ReportAccountResponse](ctx, c, fmt.Sprintf("/report/%s.json", account), query)
 }
 
 func (c Client) GetEntries(ctx context.Context, params url.Values) (EntriesResponse, error) {
